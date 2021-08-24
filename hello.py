@@ -2,7 +2,7 @@ import pandas as pd
 import streamlit as st
 import mysql.connector
 
-connection = mysql.connector.connect(**st.secrets["mysql"])
+connection = mysql.connector.connect(**st.secrets)
 
 if connection.is_connected()==False:
     print("Not Connected")
