@@ -1,18 +1,24 @@
-import pandas as pd
 import streamlit as st
 import mysql.connector
 
-connection = mysql.connector.connect(**st.secrets)
+# Initialize connection.
+# Uses st.cache to only run once.
+@st.cache(allow_output_mutation=True, hash_funcs={"_thread.RLock": lambda _: None})
+def init_connection():
+    return mysql.connector.connect(**st.secrets["mysql"])
 
-if connection.is_connected()==False:
-    print("Not Connected")
-if connection.is_connected()==True:
-    print("Connected")
+conn = init_connection()
 
-def create_user_df():
-    df = pd.read_sql_query("select  * from mytable", connection)
-    return df
-df=create_user_df()
+# Perform query.
+# Uses st.cache to only rerun when the query changes or after 10 min.
+@st.cache(ttl=600)
+def run_query(query):
+    with conn.cursor() as cur:
+        cur.execute(query)
+        return cur.fetchall()
 
-st.write("Hello World")
-st.write(df)
+rows = run_query("SELECT * from mytable;")
+
+# Print results.
+for row in rows:
+    st.write(f"{row[0]} has a :{row[1]}:")
